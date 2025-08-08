@@ -1,7 +1,10 @@
 package main
 
 import (
+	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestAddTruck(t *testing.T) {
@@ -59,25 +62,24 @@ func TestUpdateTruckCargo(t *testing.T) {
 	}
 }
 
-/*
-FIXME: Uncomment me for the concurrency part
 func TestConcurrentUpdate(t *testing.T) {
 	manager := NewTruckManager()
 	manager.AddTruck("1", 100)
 	const numGoroutines = 100
 	const iterations = 100
-	done := make(chan bool)
+
+	var wg sync.WaitGroup
+	wg.Add(numGoroutines)
+
 	for i := 0; i < numGoroutines; i++ {
 		go func() {
+			defer wg.Done()
 			for j := 0; j < iterations; j++ {
-				truck, _ := manager.GetTruck("1")
-				manager.UpdateTruckCargo("1", truck.Cargo+1)
+				manager.IncrementTruckCargo("1", 1)
 			}
-			done <- true
 		}()
 	}
-	// Wait for all goroutines to complete
-	for i := 0; i < numGoroutines; i++ {
-		<-done
-	}
-} */
+
+	wg.Wait()
+	require.Equal(t, numGoroutines*iterations+100, manager.trucks["1"].Cargo, "Final cargo should be equal to the number of goroutines times iterations plus initial cargo")
+}
