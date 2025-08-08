@@ -25,7 +25,7 @@ type truckManager struct {
 	sync.RWMutex
 }
 
-func NewTruckManager() *truckManager {
+func NewTruckManager() FleetManager {
 	return &truckManager{
 		trucks: make(map[string]*Truck),
 	}

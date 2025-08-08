@@ -11,8 +11,10 @@ func TestAddTruck(t *testing.T) {
 	manager := NewTruckManager()
 	manager.AddTruck("1", 100)
 
-	if len(manager.trucks) != 1 {
-		t.Errorf("Expected 1 truck, got %d", len(manager.trucks))
+	tx := manager.(*truckManager)
+
+	if len(tx.trucks) != 1 {
+		t.Errorf("Expected 1 truck, got %d", len(tx.trucks))
 	}
 }
 
@@ -36,13 +38,14 @@ func TestRemoveTruck(t *testing.T) {
 
 	manager.RemoveTruck("1")
 
-	_, err := manager.GetTruck("1")
+	tx := manager.(*truckManager)
+	_, err := tx.GetTruck("1")
 	if err != ErrTruckNotFound {
 		t.Errorf("Expected truck not found error, got %v", err)
 	}
 
-	if len(manager.trucks) != 0 {
-		t.Errorf("Expected 0 trucks, got %d", len(manager.trucks))
+	if len(tx.trucks) != 0 {
+		t.Errorf("Expected 0 trucks, got %d", len(tx.trucks))
 	}
 }
 
@@ -81,5 +84,6 @@ func TestConcurrentUpdate(t *testing.T) {
 	}
 
 	wg.Wait()
-	require.Equal(t, numGoroutines*iterations+100, manager.trucks["1"].Cargo, "Final cargo should be equal to the number of goroutines times iterations plus initial cargo")
+	truck, _ := manager.GetTruck("1")
+	require.Equal(t, numGoroutines*iterations+100, truck.Cargo, "Final cargo should be equal to the number of goroutines times iterations plus initial cargo")
 }
